@@ -155,3 +155,6 @@ python3 kitti.py /your/kitti/path/sequences/00/velodyne
 Kenji Koide, k.koide@aist.go.jp
 
 Human-Centered Mobility Research Center, National Institute of Advanced Industrial Science and Technology, Japan  [\[URL\]](https://unit.aist.go.jp/rirc/en/team/smart_mobility.html)
+
+## 使用注意
+fast-gicp和fast-vgicp现在不会重用协方差了，每一个点云传入，都要重新计算，以适应scan-to-map

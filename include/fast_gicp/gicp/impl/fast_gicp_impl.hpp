@@ -81,9 +81,9 @@ void FastGICP<PointSource, PointTarget>::setInputSource(const PointCloudSourceCo
 
 template <typename PointSource, typename PointTarget>
 void FastGICP<PointSource, PointTarget>::setInputTarget(const PointCloudTargetConstPtr& cloud) {
-  if (target_ == cloud) {
-    return;
-  }
+  // if (target_ == cloud) {
+  //   return;
+  // }
   pcl::Registration<PointSource, PointTarget, Scalar>::setInputTarget(cloud);
   target_kdtree_->setInputCloud(cloud);
   target_covs_.clear();

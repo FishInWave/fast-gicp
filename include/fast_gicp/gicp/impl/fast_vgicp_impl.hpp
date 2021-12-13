@@ -54,9 +54,9 @@ void FastVGICP<PointSource, PointTarget>::swapSourceAndTarget() {
 
 template <typename PointSource, typename PointTarget>
 void FastVGICP<PointSource, PointTarget>::setInputTarget(const PointCloudTargetConstPtr& cloud) {
-  if (target_ == cloud) {
-    return;
-  }
+  // if (target_ == cloud) {
+  //   return;
+  // }
 
   FastGICP<PointSource, PointTarget>::setInputTarget(cloud);
   voxelmap_.reset();
