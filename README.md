@@ -131,7 +131,7 @@ See [src/align.cpp](https://github.com/SMRT-AIST/fast_gicp/blob/master/src/align
 
 ```bash
 # Perform frame-by-frame registration
-rosrun fast_gicp gicp_kitti /your/kitti/path/sequences/00/velodyne
+rosrun fast_gicp gicp_kitti /media/xyw/Backup/AGV/dataset/KITTI/rawdata/2011_10_03/2011_10_03_drive_0027_sync/velodyne_points/data
 ```
 
 ![kitti00](https://user-images.githubusercontent.com/31344317/86207074-b98ac280-bba8-11ea-9687-e65f03aaf25b.png)
@@ -158,3 +158,4 @@ Human-Centered Mobility Research Center, National Institute of Advanced Industri
 
 ## 使用注意
 fast-gicp和fast-vgicp现在不会重用协方差了，每一个点云传入，都要重新计算，以适应scan-to-map
+程序已经被修改可以使用sync的数据，若要使用odom数据，则需要在kitti-helper处改成06d。

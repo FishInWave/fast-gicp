@@ -127,7 +127,8 @@ int main(int argc, char** argv) {
     // align and swap source and target cloud for next registration
     pcl::PointCloud<pcl::PointXYZI>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZI>);
     gicp.align(*aligned);
-    gicp.swapSourceAndTarget();
+    // gicp.swapSourceAndTarget();
+    gicp.setInputTarget(source);
 
     // accumulate pose
     poses[i] = poses[i - 1] * gicp.getFinalTransformation().cast<double>();
