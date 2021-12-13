@@ -13,7 +13,7 @@
 
 #include <fast_gicp/gicp/fast_gicp.hpp>
 #include <fast_gicp/gicp/fast_vgicp.hpp>
-
+#include "fast_gicp/time_utils.hpp"
 #ifdef USE_VGICP_CUDA
 #include <fast_gicp/ndt/ndt_cuda.hpp>
 #include <fast_gicp/gicp/fast_vgicp_cuda.hpp>
@@ -23,7 +23,7 @@ class KittiLoader {
 public:
   KittiLoader(const std::string& dataset_path) : dataset_path(dataset_path) {
     for (num_frames = 0;; num_frames++) {
-      std::string filename = (boost::format("%s/%06d.bin") % dataset_path % num_frames).str();
+      std::string filename = (boost::format("%s/%010d.bin") % dataset_path % num_frames).str();
       if (!boost::filesystem::exists(filename)) {
         break;
       }
@@ -37,8 +37,8 @@ public:
 
   size_t size() const { return num_frames; }
 
-  pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud(size_t i) const {
-    std::string filename = (boost::format("%s/%06d.bin") % dataset_path % i).str();
+  pcl::PointCloud<pcl::PointXYZI>::ConstPtr cloud(size_t i) const {
+    std::string filename = (boost::format("%s/%010d.bin") % dataset_path % i).str();
     FILE* file = fopen(filename.c_str(), "rb");
     if (!file) {
       std::cerr << "error: failed to load " << filename << std::endl;
@@ -49,7 +49,7 @@ public:
     size_t num_points = fread(reinterpret_cast<char*>(buffer.data()), sizeof(float), buffer.size(), file) / 4;
     fclose(file);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>());
     cloud->resize(num_points);
 
     for (int i = 0; i < num_points; i++) {
@@ -57,7 +57,7 @@ public:
       pt.x = buffer[i * 4];
       pt.y = buffer[i * 4 + 1];
       pt.z = buffer[i * 4 + 2];
-      // pt.intensity = buffer[i * 4 + 3];
+      pt.intensity = buffer[i * 4 + 3];
     }
 
     return cloud;
@@ -78,22 +78,26 @@ int main(int argc, char** argv) {
 
   // use downsample_resolution=1.0 for fast registration
   double downsample_resolution = 0.25;
-  pcl::ApproximateVoxelGrid<pcl::PointXYZ> voxelgrid;
+  pcl::ApproximateVoxelGrid<pcl::PointXYZI> voxelgrid;
   voxelgrid.setLeafSize(downsample_resolution, downsample_resolution, downsample_resolution);
 
   // registration method
   // you should fine-tune hyper-parameters (e.g., voxel resolution, max correspondence distance) for the best result
-  fast_gicp::FastGICP<pcl::PointXYZ, pcl::PointXYZ> gicp;
-  // fast_gicp::FastVGICP<pcl::PointXYZ, pcl::PointXYZ> gicp;
-  // fast_gicp::FastVGICPCuda<pcl::PointXYZ, pcl::PointXYZ> gicp;
-  // fast_gicp::NDTCuda<pcl::PointXYZ, pcl::PointXYZ> gicp;
+  fast_gicp::FastGICP<pcl::PointXYZI, pcl::PointXYZI> gicp;
+  // fast_gicp::FastVGICP<pcl::PointXYZI, pcl::PointXYZI> gicp;
+  // fast_gicp::FastVGICPCuda<pcl::PointXYZI, pcl::PointXYZI> gicp;
+  // fast_gicp::NDTCuda<pcl::PointXYZI, pcl::PointXYZI> gicp;
+  gicp.setNumThreads(4);
   // gicp.setResolution(1.0);
+  gicp.setTransformationEpsilon(0.01);
+  gicp.setMaximumIterations(64);
+  gicp.setCorrespondenceRandomness(20);
   // gicp.setNearestNeighborSearchMethod(fast_gicp::NearestNeighborMethod::GPU_RBF_KERNEL);
   gicp.setMaxCorrespondenceDistance(1.0);
 
   // set initial frame as target
   voxelgrid.setInputCloud(kitti.cloud(0));
-  pcl::PointCloud<pcl::PointXYZ>::Ptr target(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZI>::Ptr target(new pcl::PointCloud<pcl::PointXYZI>);
   voxelgrid.filter(*target);
   gicp.setInputTarget(target);
 
@@ -111,34 +115,36 @@ int main(int argc, char** argv) {
   // for calculating FPS
   boost::circular_buffer<std::chrono::high_resolution_clock::time_point> stamps(30);
   stamps.push_back(std::chrono::high_resolution_clock::now());
-
+  tic::TicToc t;
+  t.tic();
   for (int i = 1; i < kitti.size(); i++) {
     // set the current frame as source
     voxelgrid.setInputCloud(kitti.cloud(i));
-    pcl::PointCloud<pcl::PointXYZ>::Ptr source(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr source(new pcl::PointCloud<pcl::PointXYZI>);
     voxelgrid.filter(*source);
     gicp.setInputSource(source);
 
     // align and swap source and target cloud for next registration
-    pcl::PointCloud<pcl::PointXYZ>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr aligned(new pcl::PointCloud<pcl::PointXYZI>);
     gicp.align(*aligned);
     gicp.swapSourceAndTarget();
 
     // accumulate pose
     poses[i] = poses[i - 1] * gicp.getFinalTransformation().cast<double>();
 
-    // FPS display
-    stamps.push_back(std::chrono::high_resolution_clock::now());
-    std::cout << stamps.size() / (std::chrono::duration_cast<std::chrono::nanoseconds>(stamps.back() - stamps.front()).count() / 1e9) << "fps" << std::endl;
+    // // FPS display
+    // stamps.push_back(std::chrono::high_resolution_clock::now());
+    // std::cout << stamps.size() / (std::chrono::duration_cast<std::chrono::nanoseconds>(stamps.back() - stamps.front()).count() / 1e9) << "fps" << std::endl;
 
-    // visualization
-    trajectory->push_back(pcl::PointXYZ(poses[i](0, 3), poses[i](1, 3), poses[i](2, 3)));
-    vis.updatePointCloud<pcl::PointXYZ>(trajectory, pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(trajectory, 255.0, 0.0, 0.0), "trajectory");
-    vis.spinOnce();
+    // // visualization
+    // trajectory->push_back(pcl::PointXYZ(poses[i](0, 3), poses[i](1, 3), poses[i](2, 3)));
+    // vis.updatePointCloud<pcl::PointXYZ>(trajectory, pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ>(trajectory, 255.0, 0.0, 0.0), "trajectory");
+    // vis.spinOnce();
   }
+  cout << "time of vgicp : " << t.toc() << " ms." << endl;
 
   // save the estimated poses
-  std::ofstream ofs("/tmp/traj.txt");
+  std::ofstream ofs("/home/xyw/00_pred.txt");
   for (const auto& pose : poses) {
     for (int i = 0; i < 3; i++) {
       for (int j = 0; j < 4; j++) {
