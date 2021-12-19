@@ -35,16 +35,16 @@ void test_pcl(Registration& reg, const pcl::PointCloud<pcl::PointXYZ>::ConstPtr&
   double single = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
   std::cout << "single:" << single << "[msec] " << std::flush;
 
-  // 100 times
-  t1 = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < 100; i++) {
-    reg.setInputTarget(target);
-    reg.setInputSource(source);
-    reg.align(*aligned);
-  }
-  t2 = std::chrono::high_resolution_clock::now();
-  double multi = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
-  std::cout << "100times:" << multi << "[msec] fitness_score:" << fitness_score << std::endl;
+  // // 100 times
+  // t1 = std::chrono::high_resolution_clock::now();
+  // for (int i = 0; i < 100; i++) {
+  //   reg.setInputTarget(target);
+  //   reg.setInputSource(source);
+  //   reg.align(*aligned);
+  // }
+  // t2 = std::chrono::high_resolution_clock::now();
+  // double multi = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
+  // std::cout << "100times:" << multi << "[msec] fitness_score:" << fitness_score << std::endl;
 }
 
 // benchmark for fast_gicp registration methods
@@ -66,41 +66,41 @@ void test(Registration& reg, const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& tar
   auto t2 = std::chrono::high_resolution_clock::now();
   fitness_score = reg.getFitnessScore();
   double single = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
-
+  std::cout << "align result: \n" << reg.getFinalTransformation() << std::endl; 
   std::cout << "single:" << single << "[msec] " << std::flush;
 
-  // 100 times
-  t1 = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < 100; i++) {
-    reg.clearTarget();
-    reg.clearSource();
-    reg.setInputTarget(target);
-    reg.setInputSource(source);
-    reg.align(*aligned);
-  }
-  t2 = std::chrono::high_resolution_clock::now();
-  double multi = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
-  std::cout << "100times:" << multi << "[msec] " << std::flush;
+  // // 100 times
+  // t1 = std::chrono::high_resolution_clock::now();
+  // for (int i = 0; i < 100; i++) {
+  //   reg.clearTarget();
+  //   reg.clearSource();
+  //   reg.setInputTarget(target);
+  //   reg.setInputSource(source);
+  //   reg.align(*aligned);
+  // }
+  // t2 = std::chrono::high_resolution_clock::now();
+  // double multi = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
+  // std::cout << "100 times:" << multi << "[msec] " << std::flush;
 
-  // for some tasks like odometry calculation,
-  // you can reuse the covariances of a source point cloud in the next registration
-  t1 = std::chrono::high_resolution_clock::now();
-  pcl::PointCloud<pcl::PointXYZ>::ConstPtr target_ = target;
-  pcl::PointCloud<pcl::PointXYZ>::ConstPtr source_ = source;
-  for (int i = 0; i < 100; i++) {
-    reg.swapSourceAndTarget();
-    reg.clearSource();
+  // // for some tasks like odometry calculation,
+  // // you can reuse the covariances of a source point cloud in the next registration
+  // t1 = std::chrono::high_resolution_clock::now();
+  // pcl::PointCloud<pcl::PointXYZ>::ConstPtr target_ = target;
+  // pcl::PointCloud<pcl::PointXYZ>::ConstPtr source_ = source;
+  // for (int i = 0; i < 100; i++) {
+  //   reg.swapSourceAndTarget();
+  //   reg.clearSource();
 
-    reg.setInputTarget(target_);
-    reg.setInputSource(source_);
-    reg.align(*aligned);
+  //   reg.setInputTarget(target_);
+  //   reg.setInputSource(source_);
+  //   reg.align(*aligned);
 
-    target_.swap(source_);
-  }
-  t2 = std::chrono::high_resolution_clock::now();
-  double reuse = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
+  //   target_.swap(source_);
+  // }
+  // t2 = std::chrono::high_resolution_clock::now();
+  // double reuse = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
 
-  std::cout << "100times_reuse:" << reuse << "[msec] fitness_score:" << fitness_score << std::endl;
+  // std::cout << "100 times_reuse:" << reuse << "[msec] fitness_score:" << fitness_score << std::endl;
 }
 
 /**
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
     target_cloud->end());
 
   // downsampling
-  pcl::ApproximateVoxelGrid<pcl::PointXYZ> voxelgrid;
+  pcl::VoxelGrid<pcl::PointXYZ> voxelgrid;
   voxelgrid.setLeafSize(0.1f, 0.1f, 0.1f);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr filtered(new pcl::PointCloud<pcl::PointXYZ>());
@@ -164,7 +164,7 @@ int main(int argc, char** argv) {
   std::cout << "--- fgicp_mt ---" << std::endl;
   fast_gicp::FastGICP<pcl::PointXYZ, pcl::PointXYZ> fgicp_mt;
   // fast_gicp uses all the CPU cores by default
-  // fgicp_mt.setNumThreads(8);
+  fgicp_mt.setNumThreads(4);
   test(fgicp_mt, target_cloud, source_cloud);
 
   std::cout << "--- vgicp_st ---" << std::endl;
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
   test(vgicp, target_cloud, source_cloud);
 
   std::cout << "--- vgicp_mt ---" << std::endl;
-  vgicp.setNumThreads(omp_get_max_threads());
+  vgicp.setNumThreads(4);
   test(vgicp, target_cloud, source_cloud);
 
 #ifdef USE_VGICP_CUDA

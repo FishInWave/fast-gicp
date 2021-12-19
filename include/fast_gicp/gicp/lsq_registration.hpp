@@ -10,7 +10,7 @@
 
 namespace fast_gicp {
 
-enum class LSQ_OPTIMIZER_TYPE { GaussNewton, LevenbergMarquardt };
+enum class LSQ_OPTIMIZER_TYPE { GaussNewton, LevenbergMarquardt,LevenbergMarquardtNew };
 
 template<typename PointSource, typename PointTarget>
 class LsqRegistration : public pcl::Registration<PointSource, PointTarget, float> {
@@ -51,6 +51,7 @@ public:
   void setRotationEpsilon(double eps);
   void setInitialLambdaFactor(double init_lambda_factor);
   void setDebugPrint(bool lm_debug_print);
+  void setLSQType(LSQ_OPTIMIZER_TYPE lsq_type);
 
   const Eigen::Matrix<double, 6, 6>& getFinalHessian() const;
 
@@ -71,15 +72,17 @@ protected:
   bool step_optimize(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_gn(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_lm(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
+  bool step_lm_new(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
 
 protected:
   double rotation_epsilon_;
 
   LSQ_OPTIMIZER_TYPE lsq_optimizer_type_;
   int lm_max_iterations_;
-  double lm_init_lambda_factor_;
+  double lm_init_lambda_factor_;// tao in paper
   double lm_lambda_;
   bool lm_debug_print_;
+  double lm_sigma1_,lm_sigma2_;
 
   Eigen::Matrix<double, 6, 6> final_hessian_;
 };

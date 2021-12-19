@@ -55,6 +55,7 @@ inline Eigen::Matrix3d skewd(const Eigen::Vector3d& x) {
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+// 等价于 return Eigen::Quaterniond q(Eigen::AngleAxisd(v.norm(),v.normalized()));
 inline Eigen::Quaterniond so3_exp(const Eigen::Vector3d& omega) {
   double theta_sq = omega.dot(omega);
 
@@ -74,6 +75,11 @@ inline Eigen::Quaterniond so3_exp(const Eigen::Vector3d& omega) {
   }
 
   return Eigen::Quaterniond(real_factor, imag_factor * omega.x(), imag_factor * omega.y(), imag_factor * omega.z());
+}
+
+inline Eigen::Vector3d so3_log(const Eigen::Isometry3d& transform) {
+    Eigen::AngleAxisd aa(transform.rotation());
+    return Eigen::Vector3d(aa.angle()*aa.axis());
 }
 
 }  // namespace fast_gicp

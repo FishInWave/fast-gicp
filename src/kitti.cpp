@@ -6,6 +6,7 @@
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/filters/approximate_voxel_grid.h>
 
 #include <pcl/visualization/pcl_visualizer.h>
@@ -75,7 +76,13 @@ int main(int argc, char** argv) {
   }
 
   KittiLoader kitti(argv[1]);
-
+  // 导出pcd
+  // for(int i = 0;i < kitti.size();i++){
+  //   pcl::PointCloud<pcl::PointXYZI> cloud = *kitti.cloud(i);
+  //   std::string filename = (boost::format("%s/pcd/%010d.pcd") % argv[1] % i).str();
+  //   pcl::io::savePCDFileBinary(filename,cloud);
+  // }
+  // return 0;
   // use downsample_resolution=1.0 for fast registration
   double downsample_resolution = 0.25;
   pcl::ApproximateVoxelGrid<pcl::PointXYZI> voxelgrid;
