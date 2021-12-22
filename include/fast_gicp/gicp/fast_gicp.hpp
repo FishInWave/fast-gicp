@@ -78,6 +78,7 @@ protected:
 
   virtual double compute_error(const Eigen::Isometry3d& trans) override;
 
+  // virtual bool solve_ceres(Eigen::Isometry3d& trans, Eigen::Isometry3d& delta) override;
   template<typename PointT>
   bool calculate_covariances(const typename pcl::PointCloud<PointT>::ConstPtr& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>& covariances);
 

@@ -10,7 +10,7 @@
 
 namespace fast_gicp {
 
-enum class LSQ_OPTIMIZER_TYPE { GaussNewton, LevenbergMarquardt,LevenbergMarquardtNew };
+enum class LSQ_OPTIMIZER_TYPE { GaussNewton, LevenbergMarquardt, LevenbergMarquardtNew, CeresDogleg };
 
 template<typename PointSource, typename PointTarget>
 class LsqRegistration : public pcl::Registration<PointSource, PointTarget, float> {
@@ -65,14 +65,17 @@ protected:
   virtual void computeTransformation(PointCloudSource& output, const Matrix4& guess) override;
 
   bool is_converged(const Eigen::Isometry3d& delta) const;
-
+  // linearize里会更新对应关系，并返回目标函数值
   virtual double linearize(const Eigen::Isometry3d& trans, Eigen::Matrix<double, 6, 6>* H = nullptr, Eigen::Matrix<double, 6, 1>* b = nullptr) = 0;
   virtual double compute_error(const Eigen::Isometry3d& trans) = 0;
+  // 会被step_ceres调用
+  // virtual bool solve_ceres(Eigen::Isometry3d& trans,Eigen::Isometry3d& delta); 
 
   bool step_optimize(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_gn(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_lm(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_lm_new(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
+  // bool step_ceres(Eigen::Isometry3d& x0,Eigen::Isometry3d& delta);
 
 protected:
   double rotation_epsilon_;

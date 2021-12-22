@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
+message("Current Cmake version is : " ${CMAKE_VERSION})
 project(fast_gicp)
-
+set(CMAKE_CXX_STANDARD 14)
 option(BUILD_VGICP_CUDA "Build GPU-powered VGICP" ON)
 option(BUILD_apps "Build application programs" ON)
 option(BUILD_test "Build test programs" OFF)
@@ -13,19 +14,52 @@ else()
   set(CMAKE_CXX_FLAGS "-msse -msse2 -msse3 -msse4 -msse4.1 -msse4.2")
 endif()
 
-set(CMAKE_BUILD_TYPE "Release")
+OPTION(BUILD_WITH_CERES "Build with CERES for Non-linear Optimization" ON)
+OPTION(DEBUG_ON "Turn on DEBUG Mode" OFF)
+############
+IF(DEBUG_ON)
+MESSAGE("[Debug Mode]")
+SET(CMAKE_BUILD_TYPE "Debug") 
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+ELSE()
+MESSAGE("[Release Mode]")
+SET(CMAKE_BUILD_TYPE "Release") 
+SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3")
+ENDIF()
 
-find_package(PCL REQUIRED)
+LIST(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_modules")
+
+# PCL
+FIND_PACKAGE(PCL REQUIRED QUIET)
+IF(PCL_FOUND) 
+INCLUDE_DIRECTORIES(${PCL_INCLUDE_DIRS})
+ADD_DEFINITIONS(${PCL_DEFINITIONS})
+LIST(REMOVE_ITEM PCL_LIBRARIES "vtkproj4")
+MESSAGE("PCL [OK]:" ${PCL_INCLUDE_DIRS})
+ENDIF(PCL_FOUND)
+# Ceres
+IF(BUILD_WITH_CERES)
+FIND_PACKAGE(Ceres REQUIRED QUIET)
+IF(Ceres_FOUND)
+INCLUDE_DIRECTORIES(${CERES_INCLUDE_DIRS})
+MESSAGE("CERES [OK]:" ${CERES_INCLUDE_DIRS}) 
+ADD_DEFINITIONS(-DCERES_ON)
+ENDIF(Ceres_FOUND)
+ENDIF(BUILD_WITH_CERES)
+
 find_package(Eigen3 REQUIRED)
 
 if(NOT BUILD_PYTHON_BINDINGS)
   find_package(catkin)
 endif()
 
-find_package(OpenMP)
-if (OPENMP_FOUND)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+# OpenMP
+FIND_PACKAGE( OpenMP REQUIRED)
+if(OPENMP_FOUND)
+message("OPENMP FOUND")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
 if(BUILD_VGICP_CUDA)
@@ -63,6 +97,24 @@ target_include_directories(fast_gicp PUBLIC
   ${EIGEN3_INCLUDE_DIR}
 )
 
+SET(DEP_LIBS ${DEP_LIBS} ${PCL_LIBRARIES})
+IF(BUILD_WITH_CERES)
+#link ceres lib (optional)
+SET(DEP_LIBS ${DEP_LIBS} ${CERES_LIBRARIES})
+ENDIF(BUILD_WITH_CERES)
+
+# add_library(ceres_gicp SHARED
+#   src/litamin2/ceres_gicp.cpp
+#   src/litamin2/ceres_registration.cpp
+# )
+# target_link_libraries(ceres_gicp
+#   ${DEP_LIBS}
+# )
+# target_include_directories(ceres_gicp PUBLIC
+#   include
+#   ${PCL_INCLUDE_DIRS}
+# )
+
 ### APPS ###
 if(BUILD_apps)
   add_executable(gicp_align src/align.cpp)
@@ -70,6 +122,7 @@ if(BUILD_apps)
   target_link_libraries(gicp_align
     ${PCL_LIBRARIES}
     fast_gicp
+    # ceres_gicp
   )
 
   add_executable(gicp_kitti src/kitti.cpp)
@@ -77,6 +130,7 @@ if(BUILD_apps)
   target_link_libraries(gicp_kitti
     ${PCL_LIBRARIES}
     fast_gicp
+    # ceres_gicp
   )
 endif()
 

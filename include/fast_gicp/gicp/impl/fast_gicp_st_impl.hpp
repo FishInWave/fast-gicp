@@ -78,8 +78,8 @@ void FastGICPSingleThread<PointSource, PointTarget>::update_correspondences(cons
 
 template <typename PointSource, typename PointTarget>
 double FastGICPSingleThread<PointSource, PointTarget>::linearize(const Eigen::Isometry3d& trans, Eigen::Matrix<double, 6, 6>* H, Eigen::Matrix<double, 6, 1>* b) {
+  update_correspondences(trans);
   if (H && b) {
-    update_correspondences(trans);
     H->setZero();
     b->setZero();
   }

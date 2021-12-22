@@ -103,12 +103,19 @@ bool LsqRegistration<PointTarget, PointSource>::step_optimize(Eigen::Isometry3d&
     case LSQ_OPTIMIZER_TYPE::GaussNewton:
       return step_gn(x0, delta);
     case LSQ_OPTIMIZER_TYPE::LevenbergMarquardtNew:
-      return step_lm_new(x0,delta);
+      return step_lm_new(x0, delta);
+    case LSQ_OPTIMIZER_TYPE::CeresDogleg:
+      // return step_ceres(x0,delta);
+      return true;
   }
 
   return step_lm(x0, delta);
 }
-
+// template <typename PointTarget, typename PointSource>
+// bool solve_ceres(const Eigen::Isometry3d& trans) {
+//   std::cout << "This is lsq_restration method, your code is wrong! You should call child class's method" << std::endl;
+//   return true;
+// }
 template <typename PointTarget, typename PointSource>
 bool LsqRegistration<PointTarget, PointSource>::step_gn(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta) {
   Eigen::Matrix<double, 6, 6> H;
@@ -184,7 +191,7 @@ bool LsqRegistration<PointTarget, PointSource>::step_lm_new(Eigen::Isometry3d& x
   Eigen::Matrix<double, 6, 1> b;
   double y0 = linearize(x0, &H, &b);
   // 若J为0，则说明此处导数为0，且局部最优解=全局最优解
-  if(b.array().abs().maxCoeff() <= lm_sigma1_){
+  if (b.array().abs().maxCoeff() <= lm_sigma1_) {
     return true;
   }
   // tau越大，越接近最速；tau越小越接近GN，速度越慢；
@@ -213,7 +220,7 @@ bool LsqRegistration<PointTarget, PointSource>::step_lm_new(Eigen::Isometry3d& x
     Eigen::Isometry3d xi = delta * x0;
     // yi = F(x+delta x)
     double yi = compute_error(xi);
-    double rho = (y0 - yi) / (0.5*d.dot(lm_lambda_ * d - b));
+    double rho = (y0 - yi) / (0.5 * d.dot(lm_lambda_ * d - b));
 
     if (rho < 0) {
       lm_lambda_ = nu * lm_lambda_;
@@ -229,4 +236,9 @@ bool LsqRegistration<PointTarget, PointSource>::step_lm_new(Eigen::Isometry3d& x
 
   return false;
 }
+// template <typename PointTarget, typename PointSource>
+// bool step_ceres(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta) {
+//   // return solve_ceres(x0,delta);
+//   return true;
+// }
 }  // namespace fast_gicp

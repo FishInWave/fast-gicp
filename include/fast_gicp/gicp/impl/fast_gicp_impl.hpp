@@ -2,7 +2,9 @@
 #define FAST_GICP_FAST_GICP_IMPL_HPP
 
 #include <fast_gicp/so3/so3.hpp>
-
+#include <ceres/ceres.h>
+#include <ceres/rotation.h>
+// #include "litamin2/ceres_cost/gicp_cost.hpp"
 namespace fast_gicp {
 
 template <typename PointSource, typename PointTarget>
@@ -70,6 +72,7 @@ void FastGICP<PointSource, PointTarget>::clearTarget() {
 
 template <typename PointSource, typename PointTarget>
 void FastGICP<PointSource, PointTarget>::setInputSource(const PointCloudSourceConstPtr& cloud) {
+  // 移除功能：根据指针来跳过setInput操作
   // if (input_ == cloud) {
   //   return;
   // }
@@ -81,6 +84,7 @@ void FastGICP<PointSource, PointTarget>::setInputSource(const PointCloudSourceCo
 
 template <typename PointSource, typename PointTarget>
 void FastGICP<PointSource, PointTarget>::setInputTarget(const PointCloudTargetConstPtr& cloud) {
+  // 移除功能：根据指针来跳过setInput操作
   // if (target_ == cloud) {
   //   return;
   // }
@@ -149,6 +153,62 @@ void FastGICP<PointSource, PointTarget>::update_correspondences(const Eigen::Iso
     mahalanobis_[i] = RCR.inverse();
     mahalanobis_[i](3, 3) = 0.0f;
   }
+}
+// 1. 更新对应关系
+// 2. 构建优化方程
+// 3. 求解
+// 4. 改变trans,输出delta
+template <typename PointTarget, typename PointSource>
+bool solve_ceres(Eigen::Isometry3d& trans, Eigen::Isometry3d& delta) {
+//   update_correspondences(trans);
+//   Eigen::Isometry3d origin = trans;
+//   Eigen::Quaterniond q_guess(origin.linear());
+//   Eigen::Vector3d t_guess(origin.translation());
+//   // Eigen四元数构造是wxyz，存储是xyzw，本库全部采用eigen表达方法
+//   double para_q[4] = {q_guess.x(), q_guess.y(), q_guess.z(), q_guess.w()};
+//   double para_t[3] = {t_guess[0], t_guess[1], t_guess[2]};
+//   ceres::LossFunction* loss_function = new ceres::HuberLoss(1.0);
+//   ceres::LocalParameterization* q_parameterization = new ceres::EigenQuaternionParameterization();
+//   ceres::Problem::Options problem_options;
+//   ceres::Problem problem(problem_options);
+//   problem.AddParameterBlock(para_q, 4, q_parameterization);
+//   problem.AddParameterBlock(para_t, 3);
+//   // q_last是优化向量的映射
+//   Eigen::Map<Eigen::Quaterniond> q_last(para_q);
+//   Eigen::Map<Eigen::Vector3d> t_last(para_t);
+// #pragma omp parallel for num_threads(num_threads_) schedule(guided,8)
+//   for (int i = 0; i < input_->size(); i++) {
+//     int target_index = correspondences_[i];
+//     if (target_index < 0) {
+//       continue;
+//     }
+
+//     const Eigen::Vector3d p_mean = input_->at(i).getVector3fMap().template cast<double>();
+//     const auto& p_cov = source_covs_[i].block<3, 3>(0, 0);
+
+//     const Eigen::Vector3d q_mean = target_->at(target_index).getVector3fMap().template cast<double>();
+//     const auto& q_cov = target_covs_[target_index].block<3, 3>(0, 0);
+//     // p是source,q是target
+
+//     ceres::CostFunction* cost_function = GICP_FACTOR::Create(p_mean, q_mean, p_cov, q_cov);
+//     problem.AddResidualBlock(cost_function, loss_function, para_q, para_t);
+//   }
+//   // 开始求解ceres问题
+//   ceres::Solver::Options options;
+//   options.trust_region_strategy_type = ceres::DOGLEG;
+//   options.dogleg_type = ceres::TRADITIONAL_DOGLEG;
+//   options.linear_solver_type = ceres::DENSE_QR;
+//   options.max_num_iterations = 10;
+//   options.minimizer_progress_to_stdout = false;
+//   options.num_threads = num_threads_;
+//   ceres::Solver::Summary summary;
+//   ceres::Solve(options, &problem, &summary);  // 求解完毕后，q_last和t_last代表了target->source
+//   trans.linear() = q_last.matrix();
+//   trans.translation() = t_last;
+//   delta = origin.inverse() * trans;
+//   return summary.IsSolutionUsable();
+
+  return true;
 }
 
 template <typename PointSource, typename PointTarget>
