@@ -95,6 +95,7 @@ int main(int argc, char** argv) {
   // fast_gicp::FastVGICPCuda<pcl::PointXYZI, pcl::PointXYZI> gicp;
   // fast_gicp::NDTCuda<pcl::PointXYZI, pcl::PointXYZI> gicp;
   gicp.setNumThreads(4);
+  gicp.setLSQType(fast_gicp::LSQ_OPTIMIZER_TYPE::CeresDogleg);
   // gicp.setResolution(1.0);
   gicp.setTransformationEpsilon(0.01);
   gicp.setMaximumIterations(64);
@@ -124,7 +125,7 @@ int main(int argc, char** argv) {
   stamps.push_back(std::chrono::high_resolution_clock::now());
   tic::TicToc t;
   t.tic();
-  for (int i = 1; i < kitti.size(); i++) {
+  for (int i = 1; i < 20; i++) {
     // set the current frame as source
     voxelgrid.setInputCloud(kitti.cloud(i));
     pcl::PointCloud<pcl::PointXYZI>::Ptr source(new pcl::PointCloud<pcl::PointXYZI>);

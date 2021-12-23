@@ -1,0 +1,9 @@
+<launch>
+    <node name="gicp_align" pkg="fast_gicp" type="gicp_align" args="/home/xyw/catkin_ws/src/fast_gicp/data/251370668.pcd /home/xyw/catkin_ws/src/fast_gicp/data/251371071.pcd" output="screen"> 
+        <param name="litamin_source_size" value="5" />
+        <param name="litamin_target_size"  value="5" />
+        <param name="pcd_1"  value= "/home/xyw/catkin_ws/src/test_registration/data/251370668.pcd"/>
+        <param name="pcd_2"  value= "/home/xyw/catkin_ws/src/test_registration/data/251371071.pcd"/>
+    </node>
+    
+</launch>

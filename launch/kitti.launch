@@ -1,0 +1,5 @@
+<launch>
+	<rosparam file="$(find fast_gicp)/config/params.yaml" command="load" />
+	<node name="gicp_kitti" pkg="fast_gicp" type="gicp_kitti" args="/media/xyw/Backup/AGV/dataset/KITTI/rawdata/2011_10_03/2011_10_03_drive_0027_sync/velodyne_points/data" output="screen">
+	</node>
+</launch>

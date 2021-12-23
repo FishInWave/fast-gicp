@@ -105,17 +105,16 @@ bool LsqRegistration<PointTarget, PointSource>::step_optimize(Eigen::Isometry3d&
     case LSQ_OPTIMIZER_TYPE::LevenbergMarquardtNew:
       return step_lm_new(x0, delta);
     case LSQ_OPTIMIZER_TYPE::CeresDogleg:
-      // return step_ceres(x0,delta);
-      return true;
+      return step_ceres(x0,delta);
   }
 
   return step_lm(x0, delta);
 }
-// template <typename PointTarget, typename PointSource>
-// bool solve_ceres(const Eigen::Isometry3d& trans) {
-//   std::cout << "This is lsq_restration method, your code is wrong! You should call child class's method" << std::endl;
-//   return true;
-// }
+template <typename PointTarget, typename PointSource>
+bool LsqRegistration<PointTarget, PointSource>::solve_ceres(Eigen::Isometry3d& trans,Eigen::Isometry3d& delta) {
+  std::cout << "This is lsq_restration method, your code is wrong! You should call child class's method" << std::endl;
+  return true;
+}
 template <typename PointTarget, typename PointSource>
 bool LsqRegistration<PointTarget, PointSource>::step_gn(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta) {
   Eigen::Matrix<double, 6, 6> H;
@@ -236,9 +235,8 @@ bool LsqRegistration<PointTarget, PointSource>::step_lm_new(Eigen::Isometry3d& x
 
   return false;
 }
-// template <typename PointTarget, typename PointSource>
-// bool step_ceres(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta) {
-//   // return solve_ceres(x0,delta);
-//   return true;
-// }
+template <typename PointTarget, typename PointSource>
+bool LsqRegistration<PointTarget, PointSource>::step_ceres(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta) {
+  return solve_ceres(x0,delta);
+}
 }  // namespace fast_gicp

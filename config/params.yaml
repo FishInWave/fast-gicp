@@ -1,0 +1,17 @@
+# 存在移动硬盘里
+KITTIFile: "/media/xyw/Backup/AGV/dataset/KITTI/odometry/data_odometry_velodyne/dataset/sequences/00/velodyne"
+
+# liTAMIN2参数
+local_size: 1
+source_leaf_size: 6.0  # 10.0会爆掉
+target_leaf_size: 6.0
+
+min_points_in_voxel: 20
+
+use_target_voxel_filter: true
+voxel_target_leaf_size: 0.1
+use_source_voxel_filter: true
+voxel_source_leaf_size: 0.1
+sigmaICP: 0.5
+
+use_guess: true # true 比false在旋转和平移上都有增长

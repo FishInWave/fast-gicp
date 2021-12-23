@@ -15,17 +15,11 @@ else()
 endif()
 
 OPTION(BUILD_WITH_CERES "Build with CERES for Non-linear Optimization" ON)
-OPTION(DEBUG_ON "Turn on DEBUG Mode" OFF)
 ############
-IF(DEBUG_ON)
-MESSAGE("[Debug Mode]")
-SET(CMAKE_BUILD_TYPE "Debug") 
-SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
-ELSE()
-MESSAGE("[Release Mode]")
+# SET(CMAKE_BUILD_TYPE "Debug") 
+
 SET(CMAKE_BUILD_TYPE "Release") 
-SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3")
-ENDIF()
+
 
 LIST(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_modules")
 
@@ -81,6 +75,12 @@ endif()
 ###########
 ## Build ##
 ###########
+SET(DEP_LIBS ${DEP_LIBS} ${PCL_LIBRARIES})
+SET(DEP_LIBS ${DEP_LIBS} ${catkin_LIBRARIES})
+IF(BUILD_WITH_CERES)
+#link ceres lib (optional)
+SET(DEP_LIBS ${DEP_LIBS} ${CERES_LIBRARIES})
+ENDIF(BUILD_WITH_CERES)
 
 add_library(fast_gicp SHARED
   src/fast_gicp/gicp/lsq_registration.cpp
@@ -89,7 +89,7 @@ add_library(fast_gicp SHARED
   src/fast_gicp/gicp/fast_vgicp.cpp
 )
 target_link_libraries(fast_gicp
-  ${PCL_LIBRARIES}
+  ${DEP_LIBS}
 )
 target_include_directories(fast_gicp PUBLIC
   include
@@ -97,40 +97,20 @@ target_include_directories(fast_gicp PUBLIC
   ${EIGEN3_INCLUDE_DIR}
 )
 
-SET(DEP_LIBS ${DEP_LIBS} ${PCL_LIBRARIES})
-IF(BUILD_WITH_CERES)
-#link ceres lib (optional)
-SET(DEP_LIBS ${DEP_LIBS} ${CERES_LIBRARIES})
-ENDIF(BUILD_WITH_CERES)
-
-# add_library(ceres_gicp SHARED
-#   src/litamin2/ceres_gicp.cpp
-#   src/litamin2/ceres_registration.cpp
-# )
-# target_link_libraries(ceres_gicp
-#   ${DEP_LIBS}
-# )
-# target_include_directories(ceres_gicp PUBLIC
-#   include
-#   ${PCL_INCLUDE_DIRS}
-# )
-
 ### APPS ###
 if(BUILD_apps)
   add_executable(gicp_align src/align.cpp)
   add_dependencies(gicp_align fast_gicp)
   target_link_libraries(gicp_align
-    ${PCL_LIBRARIES}
+    ${DEP_LIBS}
     fast_gicp
-    # ceres_gicp
   )
 
   add_executable(gicp_kitti src/kitti.cpp)
   add_dependencies(gicp_kitti fast_gicp)
   target_link_libraries(gicp_kitti
-    ${PCL_LIBRARIES}
+    ${DEP_LIBS}
     fast_gicp
-    # ceres_gicp
   )
 endif()
 

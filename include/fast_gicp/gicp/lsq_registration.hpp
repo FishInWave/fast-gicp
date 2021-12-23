@@ -69,13 +69,13 @@ protected:
   virtual double linearize(const Eigen::Isometry3d& trans, Eigen::Matrix<double, 6, 6>* H = nullptr, Eigen::Matrix<double, 6, 1>* b = nullptr) = 0;
   virtual double compute_error(const Eigen::Isometry3d& trans) = 0;
   // 会被step_ceres调用
-  // virtual bool solve_ceres(Eigen::Isometry3d& trans,Eigen::Isometry3d& delta); 
+  virtual bool solve_ceres(Eigen::Isometry3d& trans,Eigen::Isometry3d& delta); 
 
   bool step_optimize(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_gn(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_lm(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
   bool step_lm_new(Eigen::Isometry3d& x0, Eigen::Isometry3d& delta);
-  // bool step_ceres(Eigen::Isometry3d& x0,Eigen::Isometry3d& delta);
+  bool step_ceres(Eigen::Isometry3d& x0,Eigen::Isometry3d& delta);
 
 protected:
   double rotation_epsilon_;

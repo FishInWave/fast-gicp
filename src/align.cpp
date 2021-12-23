@@ -33,7 +33,8 @@ void test_pcl(Registration& reg, const pcl::PointCloud<pcl::PointXYZ>::ConstPtr&
   auto t2 = std::chrono::high_resolution_clock::now();
   fitness_score = reg.getFitnessScore();
   double single = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
-  std::cout << "single:" << single << "[msec] " << std::flush;
+  std::cout << "align result: \n" << reg.getFinalTransformation() << std::endl;
+  std::cout << "single:" << single << "[msec] " << std::endl;
 
   // // 100 times
   // t1 = std::chrono::high_resolution_clock::now();
@@ -67,7 +68,7 @@ void test(Registration& reg, const pcl::PointCloud<pcl::PointXYZ>::ConstPtr& tar
   fitness_score = reg.getFitnessScore();
   double single = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
   std::cout << "align result: \n" << reg.getFinalTransformation() << std::endl; 
-  std::cout << "single:" << single << "[msec] " << std::flush;
+  std::cout << "single:" << single << "[msec] " << std::endl;
 
   // // 100 times
   // t1 = std::chrono::high_resolution_clock::now();
@@ -150,31 +151,52 @@ int main(int argc, char** argv) {
 
   std::cout << "--- pcl_gicp ---" << std::endl;
   pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> pcl_gicp;
+  pcl_gicp.setTransformationEpsilon(1e-2);
+  pcl_gicp.setMaxCorrespondenceDistance(0.5);
   test_pcl(pcl_gicp, target_cloud, source_cloud);
 
   std::cout << "--- pcl_ndt ---" << std::endl;
   pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> pcl_ndt;
   pcl_ndt.setResolution(1.0);
+  pcl_ndt.setTransformationEpsilon(1e-2);
+  pcl_ndt.setMaxCorrespondenceDistance(0.5);
   test_pcl(pcl_ndt, target_cloud, source_cloud);
 
   std::cout << "--- fgicp_st ---" << std::endl;
   fast_gicp::FastGICPSingleThread<pcl::PointXYZ, pcl::PointXYZ> fgicp_st;
+  fgicp_st.setTransformationEpsilon(1e-2);
+  fgicp_st.setMaxCorrespondenceDistance(0.5);
   test(fgicp_st, target_cloud, source_cloud);
 
   std::cout << "--- fgicp_mt ---" << std::endl;
   fast_gicp::FastGICP<pcl::PointXYZ, pcl::PointXYZ> fgicp_mt;
   // fast_gicp uses all the CPU cores by default
   fgicp_mt.setNumThreads(4);
+  fgicp_mt.setMaxCorrespondenceDistance(0.5);
+  fgicp_mt.setTransformationEpsilon(1e-2);
   test(fgicp_mt, target_cloud, source_cloud);
+
+  std::cout << "--- fgicp_ceres ---" << std::endl;
+  fast_gicp::FastGICP<pcl::PointXYZ, pcl::PointXYZ> fgicp_ceres;
+  // fast_gicp uses all the CPU cores by default
+  fgicp_ceres.setNumThreads(4);
+  fgicp_ceres.setTransformationEpsilon(1e-2);
+  fgicp_ceres.setMaxCorrespondenceDistance(0.5);
+  fgicp_ceres.setLSQType(fast_gicp::LSQ_OPTIMIZER_TYPE::CeresDogleg);
+  test(fgicp_ceres, target_cloud, source_cloud);
 
   std::cout << "--- vgicp_st ---" << std::endl;
   fast_gicp::FastVGICP<pcl::PointXYZ, pcl::PointXYZ> vgicp;
   vgicp.setResolution(1.0);
   vgicp.setNumThreads(1);
+  vgicp.setMaxCorrespondenceDistance(0.5);
+  fgicp_ceres.setTransformationEpsilon(1e-2);
   test(vgicp, target_cloud, source_cloud);
 
   std::cout << "--- vgicp_mt ---" << std::endl;
   vgicp.setNumThreads(4);
+  fgicp_ceres.setTransformationEpsilon(1e-2);
+  fgicp_ceres.setMaxCorrespondenceDistance(0.5);
   test(vgicp, target_cloud, source_cloud);
 
 #ifdef USE_VGICP_CUDA
