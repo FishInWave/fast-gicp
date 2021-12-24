@@ -19,6 +19,7 @@ FastGICP<PointSource, PointTarget>::FastGICP() {
   k_correspondences_ = 20;
   reg_name_ = "FastGICP";
   corr_dist_threshold_ = std::numeric_limits<float>::max();
+  isSE3_ = false;
 
   regularization_method_ = RegularizationMethod::PLANE;
   source_kdtree_.reset(new pcl::search::KdTree<PointSource>);
@@ -168,14 +169,22 @@ bool FastGICP<PointSource, PointTarget>::solve_ceres(Eigen::Isometry3d& trans, E
   Eigen::Quaterniond q_guess(origin.linear());
   Eigen::Vector3d t_guess(origin.translation());
   // Eigen四元数构造是wxyz，存储是xyzw，本库全部采用eigen表达方法
-  double para_q[4] = {q_guess.x(), q_guess.y(), q_guess.z(), q_guess.w()};
-  double para_t[3] = {t_guess[0], t_guess[1], t_guess[2]};
+  double para[7] = {q_guess.x(), q_guess.y(), q_guess.z(), q_guess.w(),t_guess[0], t_guess[1], t_guess[2]};
+  double* para_q;
+  double* para_t;
+  para_q = &para[0];
+  para_t = &para[4];
   ceres::LossFunction* loss_function = new ceres::HuberLoss(1.0);
   ceres::LocalParameterization* q_parameterization = new ceres::EigenQuaternionParameterization();
   ceres::Problem::Options problem_options;
   ceres::Problem problem(problem_options);
-  problem.AddParameterBlock(para_q, 4, q_parameterization);
-  problem.AddParameterBlock(para_t, 3);
+  if(!isSE3_){
+    problem.AddParameterBlock(para_q, 4, q_parameterization);
+    problem.AddParameterBlock(para_t, 3);
+  }else{
+    problem.AddParameterBlock(para, 7 ,new PoseSE3Parameterization());
+  }
+
   // q_last是优化向量的映射
   Eigen::Map<Eigen::Quaterniond> q_last(para_q);
   Eigen::Map<Eigen::Vector3d> t_last(para_t);
@@ -192,9 +201,14 @@ bool FastGICP<PointSource, PointTarget>::solve_ceres(Eigen::Isometry3d& trans, E
     const Eigen::Vector3d q_mean = target_->at(target_index).getVector3fMap().template cast<double>();
     const auto& q_cov = target_covs_[target_index].block<3, 3>(0, 0);
     // p是source,q是target
+    if(!isSE3_){
+      ceres::CostFunction* cost_function = GICP_FACTOR::Create(p_mean, q_mean, p_cov, q_cov);
+      problem.AddResidualBlock(cost_function, loss_function, para_q, para_t);
+    }else{
+      ceres::CostFunction* cost_function = new GICPAnalyticCostFunction(p_mean, q_mean, p_cov, q_cov);
+      problem.AddResidualBlock(cost_function,loss_function,para);
+    }
 
-    ceres::CostFunction* cost_function = GICP_FACTOR::Create(p_mean, q_mean, p_cov, q_cov);
-    problem.AddResidualBlock(cost_function, loss_function, para_q, para_t);
   }
   cout << "ceres add residual block time: " << t.toc() << std::endl;
   // 开始求解ceres问题

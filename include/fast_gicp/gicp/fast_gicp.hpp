@@ -51,6 +51,7 @@ public:
   void setNumThreads(int n);
   void setCorrespondenceRandomness(int k);
   void setRegularizationMethod(RegularizationMethod method);
+  void setLocalParameterization(bool isSE3){isSE3_ = isSE3;};
 
   virtual void swapSourceAndTarget() override;
   virtual void clearSource() override;
@@ -85,6 +86,7 @@ protected:
 protected:
   int num_threads_;
   int k_correspondences_;
+  bool isSE3_;
 
   RegularizationMethod regularization_method_;
 

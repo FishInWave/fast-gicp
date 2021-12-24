@@ -149,24 +149,24 @@ int main(int argc, char** argv) {
 
   std::cout << "target:" << target_cloud->size() << "[pts] source:" << source_cloud->size() << "[pts]" << std::endl;
 
-  std::cout << "--- pcl_gicp ---" << std::endl;
-  pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> pcl_gicp;
-  pcl_gicp.setTransformationEpsilon(1e-2);
-  pcl_gicp.setMaxCorrespondenceDistance(0.5);
-  test_pcl(pcl_gicp, target_cloud, source_cloud);
+  // std::cout << "--- pcl_gicp ---" << std::endl;
+  // pcl::GeneralizedIterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> pcl_gicp;
+  // pcl_gicp.setTransformationEpsilon(1e-2);
+  // pcl_gicp.setMaxCorrespondenceDistance(0.5);
+  // test_pcl(pcl_gicp, target_cloud, source_cloud);
 
-  std::cout << "--- pcl_ndt ---" << std::endl;
-  pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> pcl_ndt;
-  pcl_ndt.setResolution(1.0);
-  pcl_ndt.setTransformationEpsilon(1e-2);
-  pcl_ndt.setMaxCorrespondenceDistance(0.5);
-  test_pcl(pcl_ndt, target_cloud, source_cloud);
+  // std::cout << "--- pcl_ndt ---" << std::endl;
+  // pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> pcl_ndt;
+  // pcl_ndt.setResolution(1.0);
+  // pcl_ndt.setTransformationEpsilon(1e-2);
+  // pcl_ndt.setMaxCorrespondenceDistance(0.5);
+  // test_pcl(pcl_ndt, target_cloud, source_cloud);
 
-  std::cout << "--- fgicp_st ---" << std::endl;
-  fast_gicp::FastGICPSingleThread<pcl::PointXYZ, pcl::PointXYZ> fgicp_st;
-  fgicp_st.setTransformationEpsilon(1e-2);
-  fgicp_st.setMaxCorrespondenceDistance(0.5);
-  test(fgicp_st, target_cloud, source_cloud);
+  // std::cout << "--- fgicp_st ---" << std::endl;
+  // fast_gicp::FastGICPSingleThread<pcl::PointXYZ, pcl::PointXYZ> fgicp_st;
+  // fgicp_st.setTransformationEpsilon(1e-2);
+  // fgicp_st.setMaxCorrespondenceDistance(0.5);
+  // test(fgicp_st, target_cloud, source_cloud);
 
   std::cout << "--- fgicp_mt ---" << std::endl;
   fast_gicp::FastGICP<pcl::PointXYZ, pcl::PointXYZ> fgicp_mt;
@@ -182,22 +182,23 @@ int main(int argc, char** argv) {
   fgicp_ceres.setNumThreads(4);
   fgicp_ceres.setTransformationEpsilon(1e-2);
   fgicp_ceres.setMaxCorrespondenceDistance(0.5);
+  fgicp_ceres.setLocalParameterization(true);
   fgicp_ceres.setLSQType(fast_gicp::LSQ_OPTIMIZER_TYPE::CeresDogleg);
   test(fgicp_ceres, target_cloud, source_cloud);
 
-  std::cout << "--- vgicp_st ---" << std::endl;
-  fast_gicp::FastVGICP<pcl::PointXYZ, pcl::PointXYZ> vgicp;
-  vgicp.setResolution(1.0);
-  vgicp.setNumThreads(1);
-  vgicp.setMaxCorrespondenceDistance(0.5);
-  fgicp_ceres.setTransformationEpsilon(1e-2);
-  test(vgicp, target_cloud, source_cloud);
+  // std::cout << "--- vgicp_st ---" << std::endl;
+  // fast_gicp::FastVGICP<pcl::PointXYZ, pcl::PointXYZ> vgicp;
+  // vgicp.setResolution(1.0);
+  // vgicp.setNumThreads(1);
+  // vgicp.setMaxCorrespondenceDistance(0.5);
+  // fgicp_ceres.setTransformationEpsilon(1e-2);
+  // test(vgicp, target_cloud, source_cloud);
 
-  std::cout << "--- vgicp_mt ---" << std::endl;
-  vgicp.setNumThreads(4);
-  fgicp_ceres.setTransformationEpsilon(1e-2);
-  fgicp_ceres.setMaxCorrespondenceDistance(0.5);
-  test(vgicp, target_cloud, source_cloud);
+  // std::cout << "--- vgicp_mt ---" << std::endl;
+  // vgicp.setNumThreads(4);
+  // fgicp_ceres.setTransformationEpsilon(1e-2);
+  // fgicp_ceres.setMaxCorrespondenceDistance(0.5);
+  // test(vgicp, target_cloud, source_cloud);
 
 #ifdef USE_VGICP_CUDA
   std::cout << "--- ndt_cuda (P2D) ---" << std::endl;
