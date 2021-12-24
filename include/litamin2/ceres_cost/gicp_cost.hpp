@@ -52,7 +52,7 @@ public:
         Eigen::Quaterniond q_last_curr(parameters[0]);
         Eigen::Vector3d t_last_curr(parameters[0]+4);
         Eigen::Matrix3d mahalanobis = (q_cov_ + q_last_curr * q_cov_ * q_last_curr.inverse()).inverse();
-        Eigen::Matrix3d LT = mahalanobis.llt().matrixL().trangspose();
+        Eigen::Matrix3d LT = mahalanobis.llt().matrixL().transpose();
         Eigen::Map<Eigen::Vector3d> residuals_map(residuals);
         Eigen::Vector3d p_mean_trans = q_last_curr*p_mean_+t_last_curr;
         residuals_map = LT*(q_mean_-p_mean_trans);
