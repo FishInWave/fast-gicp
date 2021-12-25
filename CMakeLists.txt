@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.0)
 message("Current Cmake version is : " ${CMAKE_VERSION})
 project(fast_gicp)
-set(CMAKE_CXX_STANDARD 14)
+add_compile_options(-std=c++14)
 option(BUILD_VGICP_CUDA "Build GPU-powered VGICP" ON)
 option(BUILD_apps "Build application programs" ON)
 option(BUILD_test "Build test programs" OFF)
@@ -18,7 +18,8 @@ OPTION(BUILD_WITH_CERES "Build with CERES for Non-linear Optimization" ON)
 ############
 # SET(CMAKE_BUILD_TYPE "Debug") 
 
-SET(CMAKE_BUILD_TYPE "Release") 
+SET(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -pthread") 
 
 
 LIST(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_modules")

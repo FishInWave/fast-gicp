@@ -27,6 +27,15 @@ We have tested this package on Ubuntu 18.04/20.04 and CUDA 11.1.
 
 To enable the CUDA-powered implementations, set ```BUILD_VGICP_CUDA``` cmake option to ```ON```.
 
+需要注意的是，如果需要使用CUDA，则cmake应该保持较高的版本，我自己的电脑上cmake 3.10.2无法使用CUDA11.2。
+放弃CUDA
+
+升级cmake的方法: https://cmake.org/download/ 
+
+在上述网址下载合适版本的源码压缩包后，解压，运行 `./bootstrap && make && sudo make install` 即可，默认会被安装到/usr/local里。
+
+输入`cmake --version` 可以查看当前cmake版本
+
 ### ROS
 ```bash
 cd ~/catkin_ws/src

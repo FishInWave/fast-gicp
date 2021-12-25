@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
     std::cerr << "failed to open " << argv[2] << std::endl;
     return 1;
   }
-
+  int a = 0;
   // remove invalid points around origin
   source_cloud->erase(
     std::remove_if(source_cloud->begin(), source_cloud->end(), [=](const pcl::PointXYZ& pt) { return pt.getVector3fMap().squaredNorm() < 1e-3; }),

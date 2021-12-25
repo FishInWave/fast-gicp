@@ -6,7 +6,12 @@
 #include <fast_gicp/gicp/gicp_settings.hpp>
 
 namespace fast_gicp {
-
+/**
+ * @brief 选择搜索方式，方式的数字指的是周围的多少格
+ * 
+ * @param search_method 
+ * @return std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> 
+ */
 static std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> neighbor_offsets(NeighborSearchMethod search_method) {
   switch(search_method) {
       // clang-format off

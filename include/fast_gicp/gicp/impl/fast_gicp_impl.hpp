@@ -216,7 +216,7 @@ bool FastGICP<PointSource, PointTarget>::solve_ceres(Eigen::Isometry3d& trans, E
   options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
   // options.dogleg_type = ceres::TRADITIONAL_DOGLEG;
   options.linear_solver_type = ceres::DENSE_QR;
-  options.max_num_iterations = 20;
+  options.max_num_iterations = 10;
   options.function_tolerance = 1e-3;
   options.gradient_tolerance = 1e-6;
   options.minimizer_progress_to_stdout = false;
